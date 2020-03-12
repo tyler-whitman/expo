@@ -1,2 +1,5 @@
 # Compiled TypeScript
 /build/
+
+# publish-packages backup
+/.publish-packages.backup.json

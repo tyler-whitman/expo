@@ -1,24 +1,48 @@
 import path from 'path';
-import glob from 'glob';
 import fs from 'fs-extra';
+import glob from 'glob-promise';
 
 import IosUnversionablePackages from './versioning/ios/unversionablePackages.json';
 import AndroidUnversionablePackages from './versioning/android/unversionablePackages.json';
 import * as Directories from './Directories';
+import * as Npm from './Npm';
 
 const ANDROID_DIR = Directories.getAndroidDir();
 const IOS_DIR = Directories.getIosDir();
 const PACKAGES_DIR = Directories.getPackagesDir();
 
 /**
+ * Cached list of packages or `null` if they haven't been loaded yet. See `getListOfPackagesAsync`.
+ */
+let cachedPackages: Package[] | null = null;
+
+type PackageJson = {
+  name: string;
+  version: string;
+  scripts: { [key: string]: string };
+  gitHead?: string;
+  [key: string]: any;
+};
+
+/**
+ * Type of package's dependency returned by `getDependencies`.
+ */
+type PackageDependency = {
+  name: string;
+  group: string;
+  versionRange: string;
+};
+
+/**
  * Represents a package in the monorepo.
  */
 class Package {
   path: string;
-  packageJson: any;
+  packageJson: PackageJson;
   unimoduleJson: any;
+  packageView?: Npm.PackageViewType | null;
 
-  constructor(path: string, packageJson: { [key: string]: any }) {
+  constructor(path: string, packageJson: PackageJson) {
     this.path = path;
     this.packageJson = packageJson;
     this.unimoduleJson = readUnimoduleJsonAtDirectory(path);
@@ -67,18 +91,23 @@ class Package {
   }
 
   get androidSubdirectory(): string {
-    return (
-      this.unimoduleJson && this.unimoduleJson.android && this.unimoduleJson.android.subdirectory
-    ) || 'android';
+    return this.unimoduleJson?.android?.subdirectory ?? 'android';
   }
 
   get androidPackageName(): string | null {
     if (!this.isSupportedOnPlatform('android')) {
       return null;
     }
-    const buildGradle = fs.readFileSync(path.join(this.path, this.androidSubdirectory, 'build.gradle'), 'utf8');
+    const buildGradle = fs.readFileSync(
+      path.join(this.path, this.androidSubdirectory, 'build.gradle'),
+      'utf8'
+    );
     const match = buildGradle.match(/^group ?= ?'([\w.]+)'\n/m);
     return match?.[1] ?? null;
+  }
+
+  get changelogPath(): string {
+    return path.join(this.path, 'CHANGELOG.md');
   }
 
   isUnimodule() {
@@ -86,9 +115,7 @@ class Package {
   }
 
   isSupportedOnPlatform(platform: 'ios' | 'android'): boolean {
-    return this.unimoduleJson &&
-      this.unimoduleJson.platforms &&
-      this.unimoduleJson.platforms.includes(platform);
+    return this.unimoduleJson?.platforms?.includes(platform) ?? false;
   }
 
   isIncludedInExpoClientOnPlatform(platform: 'ios' | 'android'): boolean {
@@ -103,13 +130,17 @@ class Package {
       // On Android we need to read expoview's build.gradle file
       const buildGradle = fs.readFileSync(path.join(ANDROID_DIR, 'expoview/build.gradle'), 'utf8');
       const match = buildGradle.search(
-        new RegExp(`addUnimodulesDependencies\\([^\\)]+configuration\\s*:\\s*'api'[^\\)]+exclude\\s*:\\s*\\[[^\\]]*'${this.packageName}'[^\\]]*\\][^\\)]+\\)`)
+        new RegExp(
+          `addUnimodulesDependencies\\([^\\)]+configuration\\s*:\\s*'api'[^\\)]+exclude\\s*:\\s*\\[[^\\]]*'${this.packageName}'[^\\]]*\\][^\\)]+\\)`
+        )
       );
       // this is somewhat brittle so we do a quick-and-dirty sanity check:
       // 'expo-in-app-purchases' should never be included so if we don't find a match
       // for that package, something is wrong.
       if (this.packageName === 'expo-in-app-purchases' && match === -1) {
-        throw new Error("'isIncludedInExpoClientOnPlatform' is not behaving correctly, please check expoview/build.gradle format");
+        throw new Error(
+          "'isIncludedInExpoClientOnPlatform' is not behaving correctly, please check expoview/build.gradle format"
+        );
       }
       return match === -1;
     }
@@ -126,36 +157,60 @@ class Package {
     }
     throw new Error(`'isVersionableOnPlatform' is not supported on '${platform}' platform yet.`);
   }
+
+  async getPackageViewAsync(): Promise<Npm.PackageViewType | null> {
+    if (this.packageView !== undefined) {
+      return this.packageView;
+    }
+    return await Npm.getPackageViewAsync(this.packageName, this.packageVersion);
+  }
+
+  getDependencies(): PackageDependency[] {
+    const depsGroups = [
+      'dependencies',
+      'devDependencies',
+      'peerDependencies',
+      'unimodulePeerDependencies',
+    ];
+    const dependencies = depsGroups.map(group => {
+      const deps = this.packageJson[group];
+
+      return !deps
+        ? []
+        : Object.entries(deps).map(([name, versionRange]) => {
+            return {
+              name,
+              group,
+              versionRange: versionRange as string,
+            };
+          });
+    });
+    return ([] as PackageDependency[]).concat(...dependencies);
+  }
+
+  dependsOn(packageName: string): boolean {
+    return this.getDependencies().some(dep => dep.name === packageName);
+  }
 }
 
 /**
  * Resolves to an array of Package instances that represent Expo packages inside given directory.
- *
- * @param dir Directory at which the function will look for packages. Defaults to `packages`.
- * @param packages Array of already found packages (used when traversing the directory recursively).
  */
-async function getListOfPackagesAsync(
-  dir: string = PACKAGES_DIR,
-  packages: Package[] = []
-): Promise<Package[]> {
-  const dirs = await fs.readdir(dir);
+async function getListOfPackagesAsync(): Promise<Package[]> {
+  if (!cachedPackages) {
+    const paths = await glob('**/package.json', {
+      cwd: PACKAGES_DIR,
+      ignore: ['**/example/**', '**/node_modules/**'],
+    });
+    cachedPackages = paths.map(packageJsonPath => {
+      const fullPackageJsonPath = path.join(PACKAGES_DIR, packageJsonPath);
+      const packagePath = path.dirname(fullPackageJsonPath);
+      const packageJson = require(fullPackageJsonPath);
 
-  for (const dirName of dirs) {
-    const packagePath = path.join(dir, dirName);
-    const packageJsonPath = path.join(packagePath, 'package.json');
-
-    if (!(await fs.lstat(packagePath)).isDirectory()) {
-      continue;
-    }
-    if (await fs.exists(packageJsonPath)) {
-      const packageJson = require(packageJsonPath);
-      packages.push(new Package(packagePath, packageJson));
-    } else {
-      // Recursively add packages under directories without package.json file.
-      await getListOfPackagesAsync(packagePath, packages);
-    }
+      return new Package(packagePath, packageJson);
+    });
   }
-  return packages;
+  return cachedPackages;
 }
 
 function readUnimoduleJsonAtDirectory(dir: string) {

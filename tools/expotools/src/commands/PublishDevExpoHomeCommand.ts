@@ -8,6 +8,7 @@ import JsonFile from '@expo/json-file';
 import { Command } from '@expo/commander';
 
 import * as ExpoCLI from '../ExpoCLI';
+import { deepCloneObject } from '../Utils';
 import AppConfig from '../typings/AppConfig';
 import { getNewestSDKVersionAsync } from '../ProjectVersions';
 import { Directories, HashDirectory, XDL } from '../expotools';
@@ -19,7 +20,7 @@ type ActionOptions = {
 type ExpoCliStateObject = {
   auth?: {
     username?: string;
-  },
+  };
 };
 
 const EXPO_HOME_PATH = Directories.getExpoHomeJSDir();
@@ -79,13 +80,6 @@ async function setExpoCliStateAsync(newState: object): Promise<void> {
 }
 
 /**
- * Deeply clones an object. It's used to make a backup of home's `app.json` file.
- */
-function deepCloneObject<ObjectType extends object = object>(object: ObjectType): ObjectType {
-  return JSON.parse(JSON.stringify(object));
-}
-
-/**
  * Deletes kernel fields that needs to be removed from published manifest.
  */
 function deleteKernelFields(appJson: AppConfig): void {
@@ -131,7 +125,10 @@ async function publishAppAsync(slug: string, url: string): Promise<void> {
  */
 async function updateDevHomeConfigAsync(url: string): Promise<void> {
   const devHomeConfigFilename = 'dev-home-config.json';
-  const devHomeConfigPath = path.join(Directories.getExpoRepositoryRootDir(), devHomeConfigFilename);
+  const devHomeConfigPath = path.join(
+    Directories.getExpoRepositoryRootDir(),
+    devHomeConfigFilename
+  );
   const devManifestsFile = new JsonFile(devHomeConfigPath);
 
   console.log(`Updating dev home config at ${chalk.magenta(devHomeConfigFilename)}...`);
@@ -205,18 +202,28 @@ async function action(options: ActionOptions): Promise<void> {
 
   await updateDevHomeConfigAsync(url);
 
-  console.log(chalk.yellow(`Finished publishing. Remember to commit changes of ${chalk.magenta('home/app.json')} and ${chalk.magenta('dev-home-config.json')}.`));
+  console.log(
+    chalk.yellow(
+      `Finished publishing. Remember to commit changes of ${chalk.magenta(
+        'home/app.json'
+      )} and ${chalk.magenta('dev-home-config.json')}.`
+    )
+  );
 }
 
 export default (program: Command) => {
   program
     .command('publish-dev-home')
     .alias('pdh')
-    .description(`Automatically logs in your expo-cli to ${chalk.magenta(EXPO_HOME_DEV_ACCOUNT_USERNAME!)} account, publishes home app for development and logs back to your account.`)
+    .description(
+      `Automatically logs in your expo-cli to ${chalk.magenta(
+        EXPO_HOME_DEV_ACCOUNT_USERNAME!
+      )} account, publishes home app for development and logs back to your account.`
+    )
     .option(
       '-d, --dry',
       'Whether to skip `expo publish` command. Despite this, some files might be changed after running this script.',
-      false,
+      false
     )
     .asyncAction(action);
 };

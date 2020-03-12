@@ -9,7 +9,7 @@ async function getCurrentBranchNameAsync() {
   return stdout.replace(/\n+$/, '');
 }
 
-export default async function getSDKVersionFromBranchNameAsync(): Promise<string | undefined> {
+export async function getSDKVersionFromBranchNameAsync(): Promise<string | undefined> {
   const currentBranch = await getCurrentBranchNameAsync();
   const match = currentBranch.match(/\bsdk-(\d+)$/);
 
@@ -17,5 +17,4 @@ export default async function getSDKVersionFromBranchNameAsync(): Promise<string
     const sdkMajorNumber = match[1];
     return `${sdkMajorNumber}.0.0`;
   }
-  return;
 }

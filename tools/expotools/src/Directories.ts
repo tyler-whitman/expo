@@ -45,3 +45,7 @@ export function getVersionedReactNativeIosDir(): string {
 export function getAppsDir(): string {
   return path.join(getExpoRepositoryRootDir(), 'apps');
 }
+
+export function getExpoBinDir(): string {
+  return path.join(getExpoRepositoryRootDir(), 'bin');
+}
