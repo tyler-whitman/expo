@@ -12,6 +12,7 @@ import SettingsActions from '../redux/SettingsActions';
 import ScrollView from '../components/NavigationScrollView';
 import { SectionLabelContainer, GenericCardBody, GenericCardContainer } from '../components/Views';
 import { SectionLabelText, GenericCardTitle } from '../components/Text';
+import ListItem from '../components/ListItem'
 
 @connect(data => UserSettingsScreen.getDataProps(data))
 export default class UserSettingsScreen extends React.Component {
@@ -34,18 +35,10 @@ export default class UserSettingsScreen extends React.Component {
         keyboardShouldPersistTaps="always"
         keyboardDismissMode="on-drag">
         {this._renderAppearanceOptions()}
-
-        <View style={{ marginTop: 30 }}>
-          <TouchableHighlight
-            onPress={this._handlePressSignOut}
-            underlayColor={Colors.light.greyUnderlayColor}>
-            <GenericCardContainer>
-              <GenericCardBody style={styles.cardBody}>
-                <GenericCardTitle>Sign Out</GenericCardTitle>
-              </GenericCardBody>
-            </GenericCardContainer>
-          </TouchableHighlight>
-        </View>
+        <ListItem
+          style={{ marginTop: 30 }}
+          title='Sign Out'
+          onPress={this._handlePressSignOut} />
       </ScrollView>
     );
   }
@@ -67,56 +60,28 @@ export default class UserSettingsScreen extends React.Component {
         <SectionLabelContainer>
           <SectionLabelText>THEME</SectionLabelText>
         </SectionLabelContainer>
-        <TouchableHighlight
-          onPress={() => this._setPreferredAppearance('no-preference')}
-          underlayColor={Colors.light.greyUnderlayColor}
-          style={styles.button}>
-          <GenericCardContainer>
-            <GenericCardBody style={styles.cardBody}>
-              <GenericCardTitle>Automatic</GenericCardTitle>
-            </GenericCardBody>
-            {preferredAppearance === 'no-preference' && this._renderCheckmark()}
-          </GenericCardContainer>
-        </TouchableHighlight>
-
-        <TouchableHighlight
-          onPress={() => this._setPreferredAppearance('light')}
-          underlayColor={Colors.light.greyUnderlayColor}
-          style={styles.button}>
-          <GenericCardContainer>
-            <GenericCardBody style={styles.cardBody}>
-              <GenericCardTitle>Light</GenericCardTitle>
-            </GenericCardBody>
-            {preferredAppearance === 'light' && this._renderCheckmark()}
-          </GenericCardContainer>
-        </TouchableHighlight>
-
-        <TouchableHighlight
-          onPress={() => this._setPreferredAppearance('dark')}
-          underlayColor={Colors.light.greyUnderlayColor}
-          style={styles.button}>
-          <GenericCardContainer>
-            <GenericCardBody style={styles.cardBody}>
-              <GenericCardTitle>Dark</GenericCardTitle>
-            </GenericCardBody>
-            {preferredAppearance === 'dark' && this._renderCheckmark()}
-          </GenericCardContainer>
-        </TouchableHighlight>
-
+        <ListItem
+          last={false}
+          title='Automatic'
+          checked={preferredAppearance === 'no-preference'}
+          onPress={() => this._setPreferredAppearance('no-preference')}/>
+        <ListItem
+          last={false}
+          title='Light'
+          checked={preferredAppearance === 'light'}
+          onPress={() => this._setPreferredAppearance('light')} />
+        <ListItem
+          last={true}
+          margins={false}
+          title='Dark'
+          checked={preferredAppearance === 'dark'}
+          onPress={() => this._setPreferredAppearance('dark')}/>
         <View style={SharedStyles.genericCardDescriptionContainer}>
           <Text style={SharedStyles.genericCardDescriptionText}>
             Automatic is only supported on operating systems that allow you to control the
             system-wide color scheme.
           </Text>
         </View>
-      </View>
-    );
-  }
-
-  _renderCheckmark() {
-    return (
-      <View style={styles.cardIconRight}>
-        <Ionicons name="ios-checkmark" size={35} color={Colors.light.tintColor} />
       </View>
     );
   }

@@ -221,7 +221,6 @@ export default class Profile extends React.Component {
           <SeeAllProjectsButton
             apps={otherApps}
             appCount={appCount - MAX_APPS_TO_DISPLAY}
-            label="See all projects"
             onPress={this._handlePressProjectList}
           />
         </>

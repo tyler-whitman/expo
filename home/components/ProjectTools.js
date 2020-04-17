@@ -69,14 +69,13 @@ export default class ProjectTools extends React.Component {
     const shouldDisplayQRCodeButton = Constants.isDevice && !Environment.IsIOSRestrictedBuild;
 
     return (
-      <View style={{ marginBottom: 15 }}>
+      <View>
         {shouldDisplayQRCodeButton ? (
           <QRCodeButton fullWidthBorder={!displayOpenClipboardButton} />
         ) : null}
         <OpenFromClipboardButton
           clipboardContents={clipboardContents}
           isValid={displayOpenClipboardButton}
-          fullWidthBorder
         />
       </View>
     );

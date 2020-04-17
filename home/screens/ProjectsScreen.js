@@ -252,11 +252,7 @@ export default class ProjectsScreen extends React.Component {
 
   _renderProjectTools = () => {
     if (IS_RESTRICTED) {
-      return (
-        <View style={{ marginBottom: 10 }}>
-          <NoProjectTools />
-        </View>
-      );
+      return <NoProjectTools />;
     } else {
       return <ProjectTools pollForUpdates={this.props.isFocused} />;
     }
@@ -394,12 +390,6 @@ const styles = StyleSheet.create({
   },
   inDevelopmentContainer: {
     marginBottom: 15,
-  },
-  infoContainer: {
-    paddingTop: 13,
-    flexDirection: 'column',
-    alignSelf: 'stretch',
-    paddingBottom: 10,
   },
   contentContainer: {
     paddingTop: 5,
