@@ -13,6 +13,6 @@ export default class NoProjectsOpen extends React.Component<Props> {
       ? 'No projects are currently open.'
       : 'Sign in to your Expo account to see the projects you have recently been working on.';
 
-    return <ListItem subtitle={message} />;
+    return <ListItem subtitle={message} last />;
   }
 }

@@ -19,11 +19,11 @@ import PrimaryButton from './PrimaryButton';
 import EmptyProfileProjectsNotice from './EmptyProfileProjectsNotice';
 import EmptyProfileSnacksNotice from './EmptyProfileSnacksNotice';
 import SeeAllProjectsButton from './SeeAllProjectsButton';
-import SeeAllSnacksButton from './SeeAllSnacksButton';
 import SharedStyles from '../constants/SharedStyles';
 import SmallProjectCard from './SmallProjectCard';
 import SnackCard from './SnackCard';
 import ScrollView from '../components/NavigationScrollView';
+import ListItem from '../components/ListItem';
 import { SectionLabelText, StyledText } from '../components/Text';
 import { SectionLabelContainer, StyledView } from '../components/Views';
 
@@ -248,15 +248,18 @@ export default class Profile extends React.Component {
     if (!snacks || !snacks.length) {
       content = <EmptyProfileSnacksNotice isOwnProfile={this.props.isOwnProfile} />;
     } else {
-      let otherSnacks = takeRight(snacks, Math.max(0, snacks.length - MAX_SNACKS_TO_DISPLAY));
+      const otherSnacks = takeRight(snacks, Math.max(0, snacks.length - MAX_SNACKS_TO_DISPLAY));
       content = (
         <>
           {take(snacks, MAX_SNACKS_TO_DISPLAY).map(this._renderSnack)}
-          <SeeAllSnacksButton
-            snacks={otherSnacks}
-            label="See all Snacks"
-            onPress={this._handlePressSnackList}
-          />
+          {otherSnacks.length && (
+            <ListItem
+              title="See all snacks"
+              onPress={this._handlePressSnackList}
+              arrowForward
+              last
+            />
+          )}
         </>
       );
     }
@@ -307,10 +310,10 @@ export default class Profile extends React.Component {
         projectName={snack.name}
         description={snack.description}
         projectUrl={snack.fullName}
-        fullWidthBorder
       />
     );
   };
+
   _maybeRenderGithubAccount() {
     // ..
   }

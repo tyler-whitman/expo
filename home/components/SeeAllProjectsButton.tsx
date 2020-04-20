@@ -33,9 +33,6 @@ export default class SeeAllProjectsButton extends React.Component<Props> {
     return (
       <ListItem
         title="See all projects"
-        onPress={onPress}
-        chevron
-        margins={false}
         rightContent={
           <View style={styles.appIconContainer}>
             {take(apps, maxIconCount).map((app, i) =>
@@ -55,6 +52,10 @@ export default class SeeAllProjectsButton extends React.Component<Props> {
             )}
           </View>
         }
+        arrowForward
+        onPress={onPress}
+        last
+        margins={false}
       />
     );
   }

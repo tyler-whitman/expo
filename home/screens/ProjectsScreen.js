@@ -11,31 +11,28 @@ import {
   Platform,
   RefreshControl,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { withNavigationFocus, withNavigation, Themed } from 'react-navigation';
-
 import { connect } from 'react-redux';
 import semver from 'semver';
-import ScrollView from '../components/NavigationScrollView';
+
 import ApiV2HttpClient from '../api/ApiV2HttpClient';
+import ScrollView from '../components/NavigationScrollView';
 import Environment from '../utils/Environment';
 import addListenerWithNativeCallback from '../utils/addListenerWithNativeCallback';
-import Colors from '../constants/Colors';
 import DevIndicator from '../components/DevIndicator';
 import HistoryActions from '../redux/HistoryActions';
 import OpenProjectByURLButton from '../components/OpenProjectByURLButton';
 import NoProjectTools from '../components/NoProjectTools';
 import NoProjectsOpen from '../components/NoProjectsOpen';
 import ProjectTools from '../components/ProjectTools';
-import SharedStyles from '../constants/SharedStyles';
 import SmallProjectCard from '../components/SmallProjectCard';
 import Connectivity from '../api/Connectivity';
 import getSnackId from '../utils/getSnackId';
-import { SectionLabelContainer, GenericCardBody, GenericCardContainer } from '../components/Views';
-import { SectionLabelText, StyledText } from '../components/Text';
+import { StyledText } from '../components/Text';
+import ListItem from '../components/ListItem';
+import ListSection from '../components/ListSection';
 
 import extractReleaseChannel from '../utils/extractReleaseChannel';
 
@@ -105,7 +102,7 @@ export default class ProjectsScreen extends React.Component {
   }
 
   render() {
-    const { projects } = this.state;
+    const { projects, isNetworkAvailable } = this.state;
 
     return (
       <View style={styles.container}>
@@ -120,38 +117,35 @@ export default class ProjectsScreen extends React.Component {
           stickyHeaderIndices={Platform.OS === 'ios' ? [0, 2, 4] : []}
           style={styles.container}
           contentContainerStyle={styles.contentContainer}>
-          <SectionLabelContainer>
-            <SectionLabelText>
-              {(Platform.OS === 'ios' && Environment.IOSClientReleaseType === 'SIMULATOR') ||
+          <ListSection
+            title={
+              (Platform.OS === 'ios' && Environment.IOSClientReleaseType === 'SIMULATOR') ||
               (Platform.OS === 'android' && !Constants.isDevice)
-                ? 'CLIPBOARD'
-                : 'TOOLS'}
-            </SectionLabelText>
-          </SectionLabelContainer>
+                ? 'Clipboard'
+                : 'Tools'
+            }
+          />
           {this._renderProjectTools()}
 
-          <SectionLabelContainer>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+          <ListSection
+            title="Recently in development"
+            buttonLabel="Help"
+            onPress={this._handlePressHelpProjects}
+            leftContent={
               <DevIndicator
                 style={{ marginRight: 7 }}
                 isActive={projects && projects.length}
-                isNetworkAvailable={this.state.isNetworkAvailable}
+                isNetworkAvailable={isNetworkAvailable}
               />
-              <SectionLabelText>RECENTLY IN DEVELOPMENT</SectionLabelText>
-            </View>
-            <TouchableOpacity onPress={this._handlePressHelpProjects} style={styles.clearButton}>
-              <Text style={styles.clearButtonText}>HELP</Text>
-            </TouchableOpacity>
-          </SectionLabelContainer>
+            }
+          />
           {this._renderProjects()}
 
-          <SectionLabelContainer>
-            <SectionLabelText>RECENTLY OPENED</SectionLabelText>
-            <TouchableOpacity onPress={this._handlePressClearHistory} style={styles.clearButton}>
-              <Text style={styles.clearButtonText}>CLEAR</Text>
-            </TouchableOpacity>
-          </SectionLabelContainer>
-
+          <ListSection
+            title="Recently opened"
+            buttonLabel="Clear"
+            onPress={this._handlePressClearHistory}
+          />
           {this._renderRecentHistory()}
           {this._renderConstants()}
         </ScrollView>
@@ -265,15 +259,7 @@ export default class ProjectsScreen extends React.Component {
   };
 
   _renderEmptyRecentHistory = () => {
-    return (
-      <GenericCardContainer key="empty-history">
-        <GenericCardBody>
-          <Text style={[SharedStyles.faintText, { textAlign: 'center' }]}>
-            You haven't opened any projects recently.
-          </Text>
-        </GenericCardBody>
-      </GenericCardContainer>
-    );
+    return <ListItem subtitle={`You haven't opened any projects recently.`} />;
   };
 
   _renderRecentHistoryItems = () => {
@@ -393,20 +379,6 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingTop: 5,
-  },
-  clearButton: {
-    alignItems: 'flex-end',
-    flex: 1,
-  },
-  clearButtonText: {
-    color: Colors.light.greyText,
-    fontSize: 11,
-    letterSpacing: 0.92,
-    ...Platform.select({
-      ios: {
-        fontWeight: '500',
-      },
-    }),
   },
   constantsContainer: {
     paddingHorizontal: 20,

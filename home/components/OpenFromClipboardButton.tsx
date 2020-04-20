@@ -1,7 +1,6 @@
 import Constants from 'expo-constants';
 import * as React from 'react';
 import { Keyboard, Linking, Platform } from 'react-native';
-import { withNavigation } from 'react-navigation';
 
 import UrlUtils from '../utils/UrlUtils';
 import ListItem from './ListItem';
@@ -11,32 +10,31 @@ type Props = {
   clipboardContents: string;
 };
 
-@withNavigation
 export default class OpenFromClipboardButton extends React.Component<Props> {
   render() {
     const { clipboardContents, isValid } = this.props;
 
     // Show info for iOS/Android simulator about how to make clipboard contents available
-    if (!isValid && !Constants.isDevice) {
-      return (
+    if (!isValid) {
+      return Constants.isDevice ? null : (
         <ListItem
           subtitle={
             Platform.OS === 'ios'
               ? 'Press ⌘+v to move clipboard to simulator.'
               : 'Project URLs on your clipboard will appear here.'
           }
+          last
         />
       );
-    } else if (!isValid) {
-      return null;
     }
 
     return (
       <ListItem
-        onPress={this._handlePressAsync}
-        iconName="md-clipboard"
+        icon="md-clipboard"
         title="Open from Clipboard"
         subtitle={clipboardContents}
+        onPress={this._handlePressAsync}
+        last
       />
     );
   }

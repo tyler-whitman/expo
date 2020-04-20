@@ -7,9 +7,10 @@ export default class NoProjectTools extends React.Component {
   render() {
     return (
       <ListItem
-        onPress={this._handlePressAsync}
         title="Get started with Expo"
         subtitle="Run projects from expo-cli or Snack."
+        onPress={this._handlePressAsync}
+        last
       />
     );
   }

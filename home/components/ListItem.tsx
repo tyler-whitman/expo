@@ -6,6 +6,8 @@ import { Ionicons } from './Icons';
 import { StyledText } from './Text';
 import { StyledButton, StyledView } from './Views';
 
+type IconProps = React.ComponentProps<typeof Ionicons>;
+
 type Props = {
   style?: ViewStyle;
   onPress?: () => any;
@@ -14,30 +16,38 @@ type Props = {
   subtitle?: string;
   last?: boolean;
   margins?: boolean;
-  iconName?: string; // TODO: iconicons name
+  icon?: IconProps['name'];
+  iconStyle?: any;
+  //image?: any;
+  //imageStyle?: any;
   checked?: boolean;
-  chevron?: boolean;
-  rightContent?: React.ReactNode
+  arrowForward?: boolean;
+  rightContent?: React.ReactNode;
 };
 
 export default class ListItem extends React.PureComponent<Props> {
-  static defaultProps = {
-    last: true,
-  };
-
   /*
   \<Ionicons name="md-clipboard" size={26} lightColor={Colors.light.text} />
   */
 
-  renderIcon() {
-    const { iconName } = this.props;
-    return iconName ? (
-      <View style={styles.iconContainer}>
-        <Ionicons name={iconName} size={26} lightColor={Colors.light.text} />
-      </View>
-    ) : (
-      <View style={styles.marginStart} />
-    );
+  renderImage() {
+    const { icon, iconStyle /*, image, imageStyle*/ } = this.props;
+    /*if (image) {
+      return <View style={styles.imageContainer}></View>;
+    } else */ if (icon) {
+      return (
+        <View style={styles.iconContainer}>
+          <Ionicons
+            style={[styles.icon, iconStyle]}
+            name={icon}
+            lightColor={Colors.light.text}
+            darkColor="#fff"
+          />
+        </View>
+      );
+    } else {
+      return <View style={styles.marginStart} />;
+    }
   }
 
   renderTitle() {
@@ -57,7 +67,7 @@ export default class ListItem extends React.PureComponent<Props> {
       <Text
         style={[styles.subtitleText, !title ? styles.subtitleMarginBottom : undefined]}
         ellipsizeMode="tail"
-        numberOfLines={title ? 1 : undefined}>
+        numberOfLines={title ? 1 : 2}>
         {subtitle}
       </Text>
     ) : (
@@ -75,15 +85,15 @@ export default class ListItem extends React.PureComponent<Props> {
     );
   }
 
-  renderChevron() {
-    const { chevron } = this.props;
-    if (!chevron) return;
+  renderArrowForward() {
+    const { arrowForward } = this.props;
+    if (!arrowForward) return;
     return (
-      <View style={styles.chevronContainer}>
+      <View style={styles.arrowForwardContainer}>
         <Ionicons name="ios-arrow-forward" size={22} color={Colors.light.greyText} />
       </View>
     );
-      /*<Ionicons
+    /*<Ionicons
             name="ios-arrow-forward"
             size={22}
             color={Colors.light.greyText}
@@ -98,25 +108,29 @@ export default class ListItem extends React.PureComponent<Props> {
   }
 
   render() {
-    const { onPress, onLongPress, style, last, margins } = this.props;
+    const { onPress, onLongPress, style, last, margins, title, subtitle } = this.props;
     return (
       <View style={[last && margins !== false ? styles.marginBottomLast : undefined, style]}>
         <StyledButton
-          onLongPress={onLongPress}
           onPress={onPress}
+          onLongPress={onLongPress}
           fallback={TouchableHighlight}
           underlayColor="#b7b7b7"
           style={[styles.container, last ? styles.containerLast : undefined]}>
-          {this.renderIcon()}
+          {this.renderImage()}
           <StyledView
             style={[styles.contentContainer, !last ? styles.contentContainerNotLast : undefined]}>
-            <View style={styles.textContainer}>
+            <View
+              style={[
+                styles.textContainer,
+                title && subtitle ? styles.textContainerBoth : undefined,
+              ]}>
               {this.renderTitle()}
               {this.renderSubtitle()}
             </View>
             {this.renderRightContent()}
             {this.renderCheck()}
-            {this.renderChevron()}
+            {this.renderArrowForward()}
           </StyledView>
         </StyledButton>
       </View>
@@ -135,6 +149,9 @@ const styles = StyleSheet.create({
   containerLast: {
     borderBottomWidth: StyleSheet.hairlineWidth * 2,
   },
+  imageContainer: {
+    // TODO
+  },
   iconContainer: {
     // TODO
     width: 45,
@@ -143,11 +160,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  icon: {
+    fontSize: 26,
+  },
   contentContainer: {
     flex: 1,
     paddingEnd: 15,
     flexDirection: 'row',
-    alignItems: 'center'
+    alignItems: 'center',
   },
   contentContainerNotLast: {
     borderBottomWidth: StyleSheet.hairlineWidth * 2,
@@ -156,8 +176,10 @@ const styles = StyleSheet.create({
     flex: 1,
     flexDirection: 'column',
     justifyContent: 'center',
-    //paddingTop: 13,
-    //paddingBottom: 12,
+  },
+  textContainerBoth: {
+    paddingTop: 13,
+    paddingBottom: 12,
   },
   titleText: {
     fontSize: 15,
@@ -191,10 +213,10 @@ const styles = StyleSheet.create({
     marginStart: 10,
     //alignSelf: 'center',
   },
-  chevronContainer: {
+  arrowForwardContainer: {
     marginStart: 10,
     //alignSelf: 'center',
-  }
+  },
 });
 
 /*

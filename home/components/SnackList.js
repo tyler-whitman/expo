@@ -111,7 +111,6 @@ class SnackList extends React.PureComponent {
         slug={snack.slug}
         projectUrl={snack.fullName}
         description={snack.description}
-        fullWidthBorder
       />
     );
   };
