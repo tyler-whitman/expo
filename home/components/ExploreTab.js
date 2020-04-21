@@ -14,7 +14,7 @@ import ProjectCard from './ProjectCard';
 import PrimaryButton from './PrimaryButton';
 import SharedStyles from '../constants/SharedStyles';
 import { StyledText } from './Text';
-import ListSection from './ListSection';
+import SectionHeader from './SectionHeader';
 
 const NETWORK_ERROR_TEXT = dedent`
   Your connection appears to be offline.
@@ -111,7 +111,7 @@ class ExploreTab extends React.Component {
 
   _renderHeader = () => {
     const { listTitle } = this.props;
-    return listTitle ? <ListSection title={listTitle} /> : <View />;
+    return listTitle ? <SectionHeader title={listTitle} /> : <View />;
   };
 
   _renderItem = ({ item: app, index }: { item: Object, index: number }) => {

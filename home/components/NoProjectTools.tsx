@@ -9,13 +9,13 @@ export default class NoProjectTools extends React.Component {
       <ListItem
         title="Get started with Expo"
         subtitle="Run projects from expo-cli or Snack."
-        onPress={this._handlePressAsync}
+        onPress={this.handlePressAsync}
         last
       />
     );
   }
 
-  _handlePressAsync = async () => {
+  private handlePressAsync = async () => {
     Linking.openURL('https://docs.expo.io/versions/latest/introduction/installation/');
   };
 }

@@ -20,12 +20,13 @@ import EmptyProfileProjectsNotice from './EmptyProfileProjectsNotice';
 import EmptyProfileSnacksNotice from './EmptyProfileSnacksNotice';
 import SeeAllProjectsButton from './SeeAllProjectsButton';
 import SharedStyles from '../constants/SharedStyles';
-import SmallProjectCard from './SmallProjectCard';
-import SnackCard from './SnackCard';
+import SnackListItem from './SnackListItem';
 import ScrollView from '../components/NavigationScrollView';
 import ListItem from '../components/ListItem';
-import { SectionLabelText, StyledText } from '../components/Text';
-import { SectionLabelContainer, StyledView } from '../components/Views';
+import SectionHeader from '../components/SectionHeader';
+import ProjectListItem from '../components/ProjectListItem';
+import { StyledText } from '../components/Text';
+import { StyledView } from '../components/Views';
 
 const MAX_APPS_TO_DISPLAY = 3;
 const MAX_SNACKS_TO_DISPLAY = 3;
@@ -204,15 +205,16 @@ export default class Profile extends React.Component {
   };
 
   _renderApps = () => {
-    if (!this.props.data.user) {
+    const { data, isOwnProfile } = this.props;
+    if (!data.user) {
       return;
     }
 
-    let { apps, appCount } = this.props.data.user;
+    let { apps, appCount } = data.user;
     let content;
 
     if (!apps || !apps.length) {
-      content = <EmptyProfileProjectsNotice isOwnProfile={this.props.isOwnProfile} />;
+      content = <EmptyProfileProjectsNotice isOwnProfile={isOwnProfile} />;
     } else {
       let otherApps = takeRight(apps, Math.max(0, apps.length - MAX_APPS_TO_DISPLAY));
       content = (
@@ -228,10 +230,8 @@ export default class Profile extends React.Component {
     }
 
     return (
-      <View style={{ marginBottom: 3 }}>
-        <SectionLabelContainer style={{ marginTop: 10 }}>
-          <SectionLabelText>PUBLISHED PROJECTS</SectionLabelText>
-        </SectionLabelContainer>
+      <View style={styles.section}>
+        <SectionHeader title="Published projects" />
         {content}
       </View>
     );
@@ -265,10 +265,8 @@ export default class Profile extends React.Component {
     }
 
     return (
-      <View style={{ marginBottom: 3 }}>
-        <SectionLabelContainer style={{ marginTop: 10 }}>
-          <SectionLabelText>SAVED SNACKS</SectionLabelText>
-        </SectionLabelContainer>
+      <View style={styles.section}>
+        <SectionHeader title="Saved snacks" />
         {content}
       </View>
     );
@@ -290,27 +288,20 @@ export default class Profile extends React.Component {
 
   _renderApp = (app: any, i: number) => {
     return (
-      <SmallProjectCard
+      <ProjectListItem
         key={i}
-        hideUsername
-        iconUrl={app.iconUrl}
-        projectName={app.name}
-        slug={app.packageName}
-        projectUrl={app.fullName}
-        privacy={app.privacy}
-        fullWidthBorder
+        url={app.fullName}
+        unlisted={app.privacy === 'unlisted'}
+        image={app.iconUrl}
+        title={app.name}
+        subtitle={app.packageName || app.fullName}
       />
     );
   };
 
   _renderSnack = (snack: any, i: number) => {
     return (
-      <SnackCard
-        key={i}
-        projectName={snack.name}
-        description={snack.description}
-        projectUrl={snack.fullName}
-      />
+      <SnackListItem key={i} url={snack.fullName} title={snack.name} subtitle={snack.description} />
     );
   };
 
@@ -353,5 +344,8 @@ const styles = StyleSheet.create({
   headerFullNameText: {
     fontSize: 20,
     fontWeight: '500',
+  },
+  section: {
+    marginTop: 10,
   },
 });

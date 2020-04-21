@@ -1,26 +1,26 @@
 import * as React from 'react';
-import { Platform, StyleSheet } from 'react-native';
-import { withNavigation } from 'react-navigation';
+import { Platform } from 'react-native';
+import { withNavigation, NavigationInjectedProps } from 'react-navigation';
 
 import requestCameraPermissionsAsync from '../utils/requestCameraPermissionsAsync';
 import ListItem from './ListItem';
 
-@withNavigation
-export default class QRCodeButton extends React.Component {
+type Props = React.ComponentProps<typeof ListItem> & NavigationInjectedProps;
+
+class QRCodeButton extends React.Component<Props> {
   render() {
     return (
       <ListItem
         icon={Platform.OS === 'ios' ? 'ios-qr-scanner' : 'md-qr-scanner'}
-        iconStyle={styles.icon}
         title="Scan QR Code"
         subtitle="Open your projects without typing"
-        onPress={this._handlePressAsync}
-        last
+        onPress={this.handlePressAsync}
+        {...this.props}
       />
     );
   }
 
-  _handlePressAsync = async () => {
+  private handlePressAsync = async () => {
     if (await requestCameraPermissionsAsync()) {
       this.props.navigation.navigate('QRCode');
     } else {
@@ -29,8 +29,4 @@ export default class QRCodeButton extends React.Component {
   };
 }
 
-const styles = StyleSheet.create({
-  icon: {
-    fontSize: 28,
-  },
-});
+export default withNavigation(QRCodeButton);

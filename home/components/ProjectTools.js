@@ -10,6 +10,7 @@ import Environment from '../utils/Environment';
 
 import QRCodeButton from './QRCodeButton';
 import OpenFromClipboardButton from './OpenFromClipboardButton';
+import ListItem from '../components/ListItem';
 
 const CLIPBOARD_POLL_INTERVAL = 2000;
 
@@ -67,14 +68,16 @@ export default class ProjectTools extends React.Component {
   render() {
     const { clipboardContents, displayOpenClipboardButton } = this.state;
     const shouldDisplayQRCodeButton = Constants.isDevice && !Environment.IsIOSRestrictedBuild;
-
+    const shouldDisplayClipboardButton = !Constants.isDevice;
     return (
       <View>
-        {shouldDisplayQRCodeButton && <QRCodeButton last={!displayOpenClipboardButton} />}
-        <OpenFromClipboardButton
-          clipboardContents={clipboardContents}
-          isValid={displayOpenClipboardButton}
-        />
+        {shouldDisplayQRCodeButton && <QRCodeButton last={!shouldDisplayClipboardButton} />}
+        {shouldDisplayClipboardButton && (
+          <OpenFromClipboardButton
+            clipboardContents={clipboardContents}
+            isValid={displayOpenClipboardButton}
+          />
+        )}
       </View>
     );
   }

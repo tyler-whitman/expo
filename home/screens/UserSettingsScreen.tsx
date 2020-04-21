@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { connect } from 'react-redux';
 
 import ListItem from '../components/ListItem';
-import ListSection from '../components/ListSection';
 import ScrollView from '../components/NavigationScrollView';
-import SharedStyles from '../constants/SharedStyles';
+import SectionFooter from '../components/SectionFooter';
+import SectionHeader from '../components/SectionHeader';
 import SessionActions from '../redux/SessionActions';
 import SettingsActions from '../redux/SettingsActions';
 
@@ -55,15 +55,13 @@ export default class UserSettingsScreen extends React.Component<Props> {
 
     return (
       <View style={styles.marginTop}>
-        <ListSection title="Theme" />
+        <SectionHeader title="Theme" />
         <ListItem
-          last={false}
           title="Automatic"
           checked={preferredAppearance === 'no-preference'}
           onPress={() => this._setPreferredAppearance('no-preference')}
         />
         <ListItem
-          last={false}
           title="Light"
           checked={preferredAppearance === 'light'}
           onPress={() => this._setPreferredAppearance('light')}
@@ -75,19 +73,17 @@ export default class UserSettingsScreen extends React.Component<Props> {
           checked={preferredAppearance === 'dark'}
           onPress={() => this._setPreferredAppearance('dark')}
         />
-        <View style={SharedStyles.genericCardDescriptionContainer}>
-          <Text style={SharedStyles.genericCardDescriptionText}>
-            Automatic is only supported on operating systems that allow you to control the
-            system-wide color scheme.
-          </Text>
-        </View>
+        <SectionFooter
+          title="Automatic is only supported on operating systems that allow you to control the
+            system-wide color scheme."
+        />
       </View>
     );
   }
 
   _renderSignOut() {
     return (
-      <ListItem style={styles.marginTop} title="Sign Out" onPress={this._handlePressSignOut} />
+      <ListItem style={styles.marginTop} title="Sign Out" onPress={this._handlePressSignOut} last />
     );
   }
 }

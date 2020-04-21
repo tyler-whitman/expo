@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { View, ViewStyle, StyleSheet, TouchableOpacity, Text, Platform } from 'react-native';
 
-import { SectionLabelText } from '../components/Text';
-import { SectionLabelContainer } from '../components/Views';
 import Colors from '../constants/Colors';
+import { SectionLabelText } from './Text';
+import { SectionLabelContainer } from './Views';
 
 type Props = {
   style?: ViewStyle;
@@ -14,7 +14,7 @@ type Props = {
   onLongPress?: () => any;
 };
 
-export default class ListSection extends React.PureComponent<Props> {
+export default class SectionHeader extends React.PureComponent<Props> {
   render() {
     const { title, buttonLabel, onPress, onLongPress, leftContent } = this.props;
     return (

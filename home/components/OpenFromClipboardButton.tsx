@@ -1,4 +1,3 @@
-import Constants from 'expo-constants';
 import * as React from 'react';
 import { Keyboard, Linking, Platform } from 'react-native';
 
@@ -16,7 +15,7 @@ export default class OpenFromClipboardButton extends React.Component<Props> {
 
     // Show info for iOS/Android simulator about how to make clipboard contents available
     if (!isValid) {
-      return Constants.isDevice ? null : (
+      return (
         <ListItem
           subtitle={
             Platform.OS === 'ios'
@@ -26,20 +25,20 @@ export default class OpenFromClipboardButton extends React.Component<Props> {
           last
         />
       );
+    } else {
+      return (
+        <ListItem
+          icon="md-clipboard"
+          title="Open from Clipboard"
+          subtitle={clipboardContents}
+          onPress={this.handlePressAsync}
+          last
+        />
+      );
     }
-
-    return (
-      <ListItem
-        icon="md-clipboard"
-        title="Open from Clipboard"
-        subtitle={clipboardContents}
-        onPress={this._handlePressAsync}
-        last
-      />
-    );
   }
 
-  _handlePressAsync = async () => {
+  private handlePressAsync = async () => {
     // note(brentvatne): navigation should do this automatically
     Keyboard.dismiss();
 

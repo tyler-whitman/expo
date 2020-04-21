@@ -27,12 +27,12 @@ import OpenProjectByURLButton from '../components/OpenProjectByURLButton';
 import NoProjectTools from '../components/NoProjectTools';
 import NoProjectsOpen from '../components/NoProjectsOpen';
 import ProjectTools from '../components/ProjectTools';
-import SmallProjectCard from '../components/SmallProjectCard';
 import Connectivity from '../api/Connectivity';
 import getSnackId from '../utils/getSnackId';
 import { StyledText } from '../components/Text';
 import ListItem from '../components/ListItem';
-import ListSection from '../components/ListSection';
+import ProjectListItem from '../components/ProjectListItem';
+import SectionHeader from '../components/SectionHeader';
 
 import extractReleaseChannel from '../utils/extractReleaseChannel';
 
@@ -102,22 +102,19 @@ export default class ProjectsScreen extends React.Component {
   }
 
   render() {
-    const { projects, isNetworkAvailable } = this.state;
+    const { projects, isNetworkAvailable, isRefreshing } = this.state;
 
     return (
       <View style={styles.container}>
         <ScrollView
           refreshControl={
-            <RefreshControl
-              refreshing={this.state.isRefreshing}
-              onRefresh={this._handleRefreshAsync}
-            />
+            <RefreshControl refreshing={isRefreshing} onRefresh={this._handleRefreshAsync} />
           }
           key={Platform.OS === 'ios' ? this.props.allHistory.count() : 'scroll-view'}
           stickyHeaderIndices={Platform.OS === 'ios' ? [0, 2, 4] : []}
           style={styles.container}
           contentContainerStyle={styles.contentContainer}>
-          <ListSection
+          <SectionHeader
             title={
               (Platform.OS === 'ios' && Environment.IOSClientReleaseType === 'SIMULATOR') ||
               (Platform.OS === 'android' && !Constants.isDevice)
@@ -127,13 +124,13 @@ export default class ProjectsScreen extends React.Component {
           />
           {this._renderProjectTools()}
 
-          <ListSection
+          <SectionHeader
             title="Recently in development"
             buttonLabel="Help"
             onPress={this._handlePressHelpProjects}
             leftContent={
               <DevIndicator
-                style={{ marginRight: 7 }}
+                style={styles.devIndicator}
                 isActive={projects && projects.length}
                 isNetworkAvailable={isNetworkAvailable}
               />
@@ -141,7 +138,7 @@ export default class ProjectsScreen extends React.Component {
           />
           {this._renderProjects()}
 
-          <ListSection
+          <SectionHeader
             title="Recently opened"
             buttonLabel="Clear"
             onPress={this._handlePressClearHistory}
@@ -259,7 +256,7 @@ export default class ProjectsScreen extends React.Component {
   };
 
   _renderEmptyRecentHistory = () => {
-    return <ListItem subtitle={`You haven't opened any projects recently.`} />;
+    return <ListItem subtitle={`You haven't opened any projects recently.`} last />;
   };
 
   _renderRecentHistoryItems = () => {
@@ -272,27 +269,29 @@ export default class ProjectsScreen extends React.Component {
       }
     };
 
-    return this.props.recentHistory.map((project, i) => (
-      <SmallProjectCard
-        key={project.manifestUrl}
-        iconUrl={project.manifest && project.manifest.iconUrl}
-        releaseChannel={
-          /* 28/11/17(brentvatne) - we can remove extractReleaseChannel in a couple of months
+    return this.props.recentHistory.map((project, i) => {
+      const username = project.manifestUrl.includes('exp://exp.host')
+        ? extractUsername(project.manifestUrl)
+        : undefined;
+      /* 28/11/17(brentvatne) - we can remove extractReleaseChannel in a couple of months
           when project history is unlikely to include any projects with release channels */
-          (project.manifest && project.manifest.releaseChannel) ||
-          extractReleaseChannel(project.manifestUrl)
-        }
-        platform={project.platform}
-        projectName={project.manifest && project.manifest.name}
-        username={
-          project.manifestUrl.includes('exp://exp.host')
-            ? extractUsername(project.manifestUrl)
-            : null
-        }
-        projectUrl={project.manifestUrl}
-        fullWidthBorder={i === this.props.recentHistory.count() - 1}
-      />
-    ));
+      let releaseChannel =
+        project.manifest?.releaseChannel || extractReleaseChannel(project.manifestUrl);
+      releaseChannel = releaseChannel === 'default' ? undefined : releaseChannel;
+      return (
+        <ProjectListItem
+          key={project.manifestUrl}
+          url={project.manifestUrl}
+          image={project.manifest?.iconUrl}
+          platform={project.platform}
+          title={project.manifest?.name}
+          subtitle={username || project.manifestUrl}
+          username={username}
+          releaseChannel={releaseChannel}
+          last={i === this.props.recentHistory.count() - 1}
+        />
+      );
+    });
   };
 
   _renderConstants = () => {
@@ -343,23 +342,21 @@ export default class ProjectsScreen extends React.Component {
 
     if (projects && projects.length) {
       return (
-        <View style={styles.inDevelopmentContainer}>
+        <View>
           {projects.map((project, i) => (
-            <SmallProjectCard
-              icon={
+            <ProjectListItem
+              key={project.url}
+              url={project.url}
+              image={
                 project.source === 'desktop'
                   ? require('../assets/cli.png')
                   : require('../assets/snack.png')
               }
-              projectName={project.description}
+              imageStyle={styles.projectImageStyle}
+              title={project.description}
               platform={project.platform}
-              key={project.url}
-              projectUrl={project.url}
-              iconBorderStyle={{
-                borderWidth: 1,
-                borderColor: 'rgba(0, 0, 32, 0.1)',
-              }}
-              fullWidthBorder={i === projects.length - 1}
+              subtitle={project.url}
+              last={i === projects.length - 1}
             />
           ))}
         </View>
@@ -374,19 +371,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  inDevelopmentContainer: {
-    marginBottom: 15,
-  },
   contentContainer: {
     paddingTop: 5,
   },
+  projectImageStyle: {
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 32, 0.1)',
+  },
   constantsContainer: {
     paddingHorizontal: 20,
-    paddingTop: 15,
     paddingBottom: 20,
     justifyContent: 'flex-end',
     alignItems: 'center',
     flex: 1,
+  },
+  devIndicator: {
+    marginRight: 7,
   },
   deviceIdText: {
     fontSize: 11,
