@@ -230,7 +230,7 @@ export default class Profile extends React.Component {
     }
 
     return (
-      <View style={styles.section}>
+      <View>
         <SectionHeader title="Published projects" />
         {content}
       </View>
@@ -265,7 +265,7 @@ export default class Profile extends React.Component {
     }
 
     return (
-      <View style={styles.section}>
+      <View>
         <SectionHeader title="Saved snacks" />
         {content}
       </View>
@@ -319,6 +319,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderTopWidth: 1,
     borderBottomWidth: 1,
+    marginBottom: 5,
   },
   headerAvatarContainer: {
     marginTop: 20,
@@ -344,8 +345,5 @@ const styles = StyleSheet.create({
   headerFullNameText: {
     fontSize: 20,
     fontWeight: '500',
-  },
-  section: {
-    marginTop: 10,
   },
 });

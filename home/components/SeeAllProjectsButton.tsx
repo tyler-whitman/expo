@@ -55,7 +55,6 @@ export default class SeeAllProjectsButton extends React.Component<Props> {
         arrowForward
         onPress={onPress}
         last
-        margins={false}
       />
     );
   }
