@@ -1,9 +1,5 @@
-/**
- * @flow
- */
-
 import Constants from 'expo-constants';
-import React from 'react';
+import * as React from 'react';
 import {
   AppState,
   Alert,
@@ -15,48 +11,58 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { withNavigationFocus, withNavigation, Themed } from 'react-navigation';
-
+import {
+  withNavigationFocus,
+  withNavigation,
+  Themed,
+  NavigationFocusInjectedProps,
+} from 'react-navigation';
 import { connect } from 'react-redux';
 import semver from 'semver';
-import ScrollView from '../components/NavigationScrollView';
+
 import ApiV2HttpClient from '../api/ApiV2HttpClient';
-import Environment from '../utils/Environment';
-import addListenerWithNativeCallback from '../utils/addListenerWithNativeCallback';
-import Colors from '../constants/Colors';
+import Connectivity from '../api/Connectivity';
 import DevIndicator from '../components/DevIndicator';
-import HistoryActions from '../redux/HistoryActions';
-import OpenProjectByURLButton from '../components/OpenProjectByURLButton';
+import ScrollView from '../components/NavigationScrollView';
 import NoProjectTools from '../components/NoProjectTools';
 import NoProjectsOpen from '../components/NoProjectsOpen';
+import OpenProjectByURLButton from '../components/OpenProjectByURLButton';
 import ProjectTools from '../components/ProjectTools';
-import SharedStyles from '../constants/SharedStyles';
 import SmallProjectCard from '../components/SmallProjectCard';
-import Connectivity from '../api/Connectivity';
-import getSnackId from '../utils/getSnackId';
-import { SectionLabelContainer, GenericCardBody, GenericCardContainer } from '../components/Views';
 import { SectionLabelText, StyledText } from '../components/Text';
-
+import { SectionLabelContainer, GenericCardBody, GenericCardContainer } from '../components/Views';
+import Colors from '../constants/Colors';
+import SharedStyles from '../constants/SharedStyles';
+import HistoryActions from '../redux/HistoryActions';
+import { DevSession, StoreData, HistoryList } from '../types';
+import Environment from '../utils/Environment';
+import addListenerWithNativeCallback from '../utils/addListenerWithNativeCallback';
 import extractReleaseChannel from '../utils/extractReleaseChannel';
+import getSnackId from '../utils/getSnackId';
 
 const IS_RESTRICTED = Environment.IsIOSRestrictedBuild;
 const PROJECT_UPDATE_INTERVAL = 10000;
 
 const SupportedExpoSdks = Constants.supportedExpoSdks || [];
 
+type Props = NavigationFocusInjectedProps & {
+  dispatch: (any) => any;
+  recentHistory: HistoryList;
+  allHistory: HistoryList;
+  isAuthenticated: boolean;
+};
+
+type State = {
+  projects: DevSession[];
+  isNetworkAvailable: boolean;
+  isRefreshing: boolean;
+};
+
 @withNavigationFocus
 @withNavigation
 @connect(data => ProjectsScreen.getDataProps(data))
-export default class ProjectsScreen extends React.Component {
-  props: {
-    navigation: any,
-    isFocused: boolean,
-    dispatch: () => void,
-    recentHistory: any,
-    allHistory: any,
-    navigator: any,
-    isAuthenticated: boolean,
-  };
+export default class ProjectsScreen extends React.Component<Props, State> {
+  private _projectPolling?: number;
 
   static navigationOptions = {
     title: 'Projects',
@@ -67,17 +73,17 @@ export default class ProjectsScreen extends React.Component {
     }),
   };
 
-  static getDataProps(data) {
-    let { history } = data.history;
+  static getDataProps(data: StoreData) {
+    const { history } = data.history;
 
     return {
       recentHistory: history.take(10),
       allHistory: history,
-      isAuthenticated: data.session && data.session.sessionSecret,
+      isAuthenticated: data.session?.sessionSecret,
     };
   }
 
-  state = {
+  state: State = {
     projects: [],
     isNetworkAvailable: Connectivity.isAvailable(),
     isRefreshing: false,
@@ -161,7 +167,7 @@ export default class ProjectsScreen extends React.Component {
     );
   }
 
-  componentDidUpdate(prevProps) {
+  componentDidUpdate(prevProps: Props) {
     if (!prevProps.isFocused && this.props.isFocused) {
       this._fetchProjectsAsync();
     }
@@ -174,13 +180,13 @@ export default class ProjectsScreen extends React.Component {
     }
   }
 
-  _updateConnectivity = (isAvailable: boolean): void => {
+  private _updateConnectivity = (isAvailable: boolean): void => {
     if (isAvailable !== this.state.isNetworkAvailable) {
       this.setState({ isNetworkAvailable: isAvailable });
     }
   };
 
-  _maybeResumePollingFromAppState = (nextAppState: string): void => {
+  private _maybeResumePollingFromAppState = (nextAppState: string): void => {
     if (nextAppState === 'active' && !this._projectPolling) {
       this._startPollingForProjects();
     } else {
@@ -188,20 +194,20 @@ export default class ProjectsScreen extends React.Component {
     }
   };
 
-  _startPollingForProjects = async () => {
+  private _startPollingForProjects = async () => {
     this._handleRefreshAsync();
     this._projectPolling = setInterval(this._fetchProjectsAsync, PROJECT_UPDATE_INTERVAL);
   };
 
-  _stopPollingForProjects = async () => {
+  private _stopPollingForProjects = async () => {
     clearInterval(this._projectPolling);
-    this._projectPolling = null;
+    this._projectPolling = undefined;
   };
 
-  _fetchProjectsAsync = async () => {
+  private _fetchProjectsAsync = async () => {
     try {
-      let api = new ApiV2HttpClient();
-      let projects = await api.getAsync('development-sessions', {
+      const api = new ApiV2HttpClient();
+      const projects = await api.getAsync('development-sessions', {
         deviceId: getSnackId(),
       });
       this.setState({ projects });
@@ -213,7 +219,7 @@ export default class ProjectsScreen extends React.Component {
     }
   };
 
-  _handleRefreshAsync = async () => {
+  private _handleRefreshAsync = async () => {
     this.setState({ isRefreshing: true });
 
     try {
@@ -228,7 +234,7 @@ export default class ProjectsScreen extends React.Component {
     }
   };
 
-  _handlePressHelpProjects = () => {
+  private _handlePressHelpProjects = () => {
     if (!this.state.isNetworkAvailable) {
       Alert.alert(
         'No network connection available',
@@ -236,8 +242,8 @@ export default class ProjectsScreen extends React.Component {
       );
     }
 
-    let baseMessage = `Make sure you are signed in to the same Expo account on your computer and this app. Also verify that your computer is connected to the internet, and ideally to the same Wi-Fi network as your mobile device. Lastly, ensure that you are using the latest version of Expo CLI. Pull to refresh to update.`;
-    let message = Platform.select({
+    const baseMessage = `Make sure you are signed in to the same Expo account on your computer and this app. Also verify that your computer is connected to the internet, and ideally to the same Wi-Fi network as your mobile device. Lastly, ensure that you are using the latest version of Expo CLI. Pull to refresh to update.`;
+    const message = Platform.select({
       ios: Constants.isDevice
         ? baseMessage
         : `${baseMessage} If this still doesn't work, press the + icon on the header to type the project URL manually.`,
@@ -246,11 +252,11 @@ export default class ProjectsScreen extends React.Component {
     Alert.alert('Troubleshooting', message);
   };
 
-  _handlePressClearHistory = () => {
+  private _handlePressClearHistory = () => {
     this.props.dispatch(HistoryActions.clearHistory());
   };
 
-  _renderProjectTools = () => {
+  private _renderProjectTools = () => {
     if (IS_RESTRICTED) {
       return (
         <View style={{ marginBottom: 10 }}>
@@ -262,13 +268,13 @@ export default class ProjectsScreen extends React.Component {
     }
   };
 
-  _renderRecentHistory = () => {
+  private _renderRecentHistory = () => {
     return this.props.allHistory.count() === 0
       ? this._renderEmptyRecentHistory()
       : this._renderRecentHistoryItems();
   };
 
-  _renderEmptyRecentHistory = () => {
+  private _renderEmptyRecentHistory = () => {
     return (
       <GenericCardContainer key="empty-history">
         <GenericCardBody>
@@ -280,9 +286,9 @@ export default class ProjectsScreen extends React.Component {
     );
   };
 
-  _renderRecentHistoryItems = () => {
+  private _renderRecentHistoryItems = () => {
     const extractUsername = manifestUrl => {
-      let username = manifestUrl.match(/@.*?\//)[0];
+      const username = manifestUrl.match(/@.*?\//)[0];
       if (!username) {
         return null;
       } else {
@@ -290,30 +296,33 @@ export default class ProjectsScreen extends React.Component {
       }
     };
 
-    return this.props.recentHistory.map((project, i) => (
-      <SmallProjectCard
-        key={project.manifestUrl}
-        iconUrl={project.manifest && project.manifest.iconUrl}
-        releaseChannel={
-          /* 28/11/17(brentvatne) - we can remove extractReleaseChannel in a couple of months
+    return this.props.recentHistory.map(
+      (project, i) =>
+        project && (
+          <SmallProjectCard
+            key={project.manifestUrl}
+            iconUrl={project.manifest?.iconUrl}
+            releaseChannel={
+              /* 28/11/17(brentvatne) - we can remove extractReleaseChannel in a couple of months
           when project history is unlikely to include any projects with release channels */
-          (project.manifest && project.manifest.releaseChannel) ||
-          extractReleaseChannel(project.manifestUrl)
-        }
-        platform={project.platform}
-        projectName={project.manifest && project.manifest.name}
-        username={
-          project.manifestUrl.includes('exp://exp.host')
-            ? extractUsername(project.manifestUrl)
-            : null
-        }
-        projectUrl={project.manifestUrl}
-        fullWidthBorder={i === this.props.recentHistory.count() - 1}
-      />
-    ));
+              (project.manifest && project.manifest.releaseChannel) ||
+              extractReleaseChannel(project.manifestUrl)
+            }
+            platform={project.platform}
+            projectName={project.manifest?.name}
+            username={
+              project.manifestUrl.includes('exp://exp.host')
+                ? extractUsername(project.manifestUrl)
+                : null
+            }
+            projectUrl={project.manifestUrl}
+            fullWidthBorder={i === this.props.recentHistory.count() - 1}
+          />
+        )
+    );
   };
 
-  _renderConstants = () => {
+  private _renderConstants = () => {
     return (
       <View style={styles.constantsContainer}>
         <StyledText
@@ -344,20 +353,20 @@ export default class ProjectsScreen extends React.Component {
     );
   };
 
-  _copySnackIdToClipboard = () => {
+  private _copySnackIdToClipboard = () => {
     Clipboard.setString(getSnackId());
 
     // Should have some integrated alert banner
     alert('The device ID has been copied to your clipboard');
   };
 
-  _copyClientVersionToClipboard = () => {
+  private _copyClientVersionToClipboard = () => {
     Clipboard.setString(Constants.expoVersion);
     alert('The client version has been copied to your clipboard');
   };
 
-  _renderProjects = () => {
-    let { projects } = this.state;
+  private _renderProjects = () => {
+    const { projects } = this.state;
 
     if (projects && projects.length) {
       return (
