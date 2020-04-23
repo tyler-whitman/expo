@@ -102,6 +102,7 @@ static NSString * const kEXUpdatesAppControllerErrorDomain = @"EXUpdatesAppContr
     [self _emergencyLaunchWithFatalError:fsError];
     return;
   }
+    NSLog(@"updatesDirectory %@", _updatesDirectory.absoluteString);
 
   __block BOOL dbSuccess;
   __block NSError *dbError;
@@ -211,6 +212,11 @@ static NSString * const kEXUpdatesAppControllerErrorDomain = @"EXUpdatesAppContr
 - (nullable NSDictionary *)assetFilesMap
 {
   return _launcher.assetFilesMap ?: nil;
+}
+
+- (BOOL)isUsingLocalAssetFiles
+{
+  return _launcher.isUsingLocalAssetFiles ?: NO;
 }
 
 # pragma mark - internal
