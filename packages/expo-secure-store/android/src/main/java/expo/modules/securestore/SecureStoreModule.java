@@ -88,7 +88,7 @@ public class SecureStoreModule extends ExportedModule {
       return;
     }
 
-    SharedPreferences prefs = getContext().getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
+    SharedPreferences prefs = getSharedPreferences();
 
     if (value == null) {
       boolean success = prefs.edit().putString(key, null).commit();
@@ -297,7 +297,8 @@ public class SecureStoreModule extends ExportedModule {
    * lets us easily list or remove all the entries for an experience.
    */
   private SharedPreferences getSharedPreferences() {
-    return getContext().getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
+    String experienceId = "%40helium%2Fhelium-wallet";
+    return getContext().getSharedPreferences(experienceId + "-" + SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
   }
 
   private KeyStore getKeyStore() throws IOException, KeyStoreException, NoSuchAlgorithmException, CertificateException {
