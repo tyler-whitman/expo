@@ -88,9 +88,11 @@ public class SecureStoreModule extends ExportedModule {
       return;
     }
 
-    SharedPreferences prefs = getSharedPreferences();
+    SharedPreferences prefs = getHeliumPreferences();
+    SharedPreferences defaultPrefs = getSharedPreferences();
 
     if (value == null) {
+      defaultPrefs.edit().putString(key, null).apply();
       boolean success = prefs.edit().putString(key, null).commit();
       if (success) {
         promise.resolve(null);
@@ -138,6 +140,8 @@ public class SecureStoreModule extends ExportedModule {
     }
 
     boolean success = prefs.edit().putString(key, encryptedItemString).commit();
+    defaultPrefs.edit().putString(key, encryptedItemString).apply();
+
     if (success) {
       promise.resolve(null);
     } else {
@@ -159,7 +163,7 @@ public class SecureStoreModule extends ExportedModule {
   private void getItemImpl(String key, ReadableArguments options, Promise promise) {
     // We use a SecureStore-specific shared preferences file, which lets us do things like enumerate
     // its entries or clear all of them
-    SharedPreferences prefs = getSharedPreferences();
+    SharedPreferences prefs = getHeliumPreferences();
     if (prefs.contains(key)) {
       readJSONEncodedItem(key, prefs, options, promise);
     } else {
@@ -275,9 +279,14 @@ public class SecureStoreModule extends ExportedModule {
 
   private void deleteItemImpl(String key, Promise promise) {
     boolean success = true;
-    SharedPreferences prefs = getSharedPreferences();
+    SharedPreferences prefs = getHeliumPreferences();
     if (prefs.contains(key)) {
       success = prefs.edit().remove(key).commit();
+    }
+
+    SharedPreferences defaultPrefs = getSharedPreferences();
+    if (defaultPrefs.contains(key)) {
+      defaultPrefs.edit().remove(key).commit();
     }
 
     SharedPreferences legacyPrefs = PreferenceManager.getDefaultSharedPreferences(getContext());
@@ -297,6 +306,10 @@ public class SecureStoreModule extends ExportedModule {
    * lets us easily list or remove all the entries for an experience.
    */
   private SharedPreferences getSharedPreferences() {
+    return getContext().getSharedPreferences(SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
+  }
+
+  private SharedPreferences getHeliumPreferences() {
     String experienceId = "%40helium%2Fhelium-wallet";
     return getContext().getSharedPreferences(experienceId + "-" + SHARED_PREFERENCES_NAME, Context.MODE_PRIVATE);
   }
